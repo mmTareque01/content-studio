@@ -1,0 +1,41 @@
+{
+  "name": "content-studio",
+  "version": "1.0.0",
+  "description": "AI video editor for vertical shorts: drop in a clip, Claude Code adds voice-synced motion graphics, captions, camera moves and sound design. Runs locally on a Mac.",
+  "scripts": {
+    "setup": "./setup.sh",
+    "studio": "remotion studio src/index.ts",
+    "prepare-clip": "scripts/prepare.sh",
+    "render": "scripts/render.sh",
+    "typecheck": "tsc -p ."
+  },
+  "keywords": [
+    "video",
+    "remotion",
+    "shorts",
+    "reels",
+    "tiktok",
+    "captions",
+    "motion-graphics",
+    "claude",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/cli": "^4.0.529",
+    "@remotion/google-fonts": "^4.0.529",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.529"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  },
+  "private": true
+}

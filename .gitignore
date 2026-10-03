@@ -1,0 +1,9 @@
+node_modules/
+.venv/
+.DS_Store
+work/
+output/
+inbox/
+public/videos/
+models/*.torchscript
+public/assets/sfx/

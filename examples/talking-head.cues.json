@@ -1,0 +1,15 @@
+{
+  "accent": "#7C5CFF",
+  "accent2": "#FFE14D",
+  "background": null,
+  "music": null,
+  "emphasis": ["doesn't", "three", "pulse"],
+  "cues": [
+    {"from": 0.0,  "to": 2.4,  "type": "hook", "text": "Perfume lasts all day?", "highlight": ["all", "day"]},
+    {"from": 2.4,  "to": 4.8,  "type": "title", "text": "It doesn't.", "sub": "3 tricks that fix it"},
+    {"from": 2.45, "to": 4.6,  "type": "sticker", "text": "Myth", "emoji": "❌", "x": 74, "y": 36, "rotate": 8},
+    {"from": 4.8,  "to": 11.1, "type": "steps", "items": ["Apply after a shower", "Moisturize your skin", "Spray on pulse points"], "at": [4.84, 6.8, 8.94]},
+    {"from": 11.1, "to": 13.47, "type": "stat", "value": 70, "suffix": "%", "label": "of scent fades in 4 hours"},
+    {"from": 11.15, "to": 13.0, "type": "burst", "emoji": ["💨", "🌸"], "count": 18}
+  ]
+}
