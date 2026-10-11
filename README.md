@@ -55,9 +55,19 @@ npm run studio                                        # live preview in the brow
 scripts/render.sh my-clip                             # -> output/my-clip.mp4
 ```
 
-Two modes:
+Three modes:
 - **Talking head** (default): you, cut out of your background, over an animated studio, graphics or b-roll.
 - **Footage** (`"footage": true`): full-screen vlog/b-roll with graphics on top.
+- **Voice-over** (`"voice": true`): give `prepare.sh` an audio file (mp3/m4a/wav…) instead of a video. Your voice narrates; the picture is built from full-screen stock `scene`s, cards and captions timed to your words.
+
+### Voice-over videos
+```bash
+scripts/prepare.sh inbox/ai-future.m4a ai-future                 # cut silences, level, transcribe
+export PEXELS_API_KEY=...                                        # free key: https://www.pexels.com/api/
+.venv/bin/python scripts/stock.py ai-future "robot arm factory"  # portrait clips -> public/videos/ai-future/stock/
+.venv/bin/python scripts/stock.py ai-future "city night" --photos
+```
+Or just say *"make a video from inbox/ai-future.m4a"* and Claude picks the searches. Without a Pexels key, drop your own images/clips in `public/assets/` or go text-only on the animated studio.
 
 ## cues.json
 
@@ -86,6 +96,7 @@ Two modes:
     {"from": 20, "to": 23, "type": "image", "src": "assets/images/bottle.jpg", "caption": "..."},
     {"from": 23, "to": 26, "type": "pointer", "x": 22, "y": 58, "shape": "circle", "label": "This one 👀"},
     {"from": 23, "to": 26, "type": "zoom", "scale": 1.3, "x": 22, "y": 58},
+    {"from": 0, "to": 4, "type": "scene", "src": "videos/ai-future/stock/robot-arm-factory-1.mp4", "move": "in"},
     {"from": 26, "to": 29, "type": "rating", "title": "Verdict", "items": [{"label": "Taste", "value": 4.5}]},
     {"from": 29, "to": 32, "type": "bars", "title": "Price", "items": [{"label": "Here", "value": 48}, {"label": "Mall", "value": 95}], "suffix": "¥"},
     {"from": 0, "to": 2.5, "type": "location", "place": "Chengdu", "sub": "Hidden gem", "pos": "bottom"},
@@ -104,6 +115,7 @@ Every cue also accepts `pos` (`top`/`center`/`bottom`, card cues), `sfx: false`,
 | `sticker` | tilted badge slapped anywhere (`x`,`y` in %) |
 | `pointer` | hand-drawn `circle` / `arrow` at `x`,`y` (%) with a label — point at things in the shot |
 | `zoom` | invisible camera push into `x`,`y` (%) for the cue's duration |
+| `scene` | full-screen stock image/clip (`src`) under the cards with a slow Ken Burns `move` (`in`/`out`/`left`/`right`/`up`/`down`), `dim` (0–1, default 0.35), `start` (s into the clip); crossfades from the previous scene |
 | `burst` | full-screen emoji particles (`explode` or `rain`) |
 | `rating` / `bars` | star ratings / animated bar chart |
 | `location` | pin drop + typed place name |
@@ -113,7 +125,7 @@ Sound effects live in `public/assets/sfx/` (regenerate with `scripts/make-sfx.sh
 
 ## Project layout
 - `.claude/skills/edit-video/` is the AI editing playbook Claude follows
-- `scripts/` is the prep pipeline (silence cut, reframe, transcribe, cutout, sfx)
+- `scripts/` is the prep pipeline (silence cut, reframe, transcribe, cutout, stock, sfx)
 - `src/` is the Remotion template: `Explainer.tsx` (layers), `graphics/` (cues, captions, camera, film, particles, sfx)
 - `examples/` has sample `cues.json` files
 - `public/assets/` holds your music, backgrounds, images and logos (free sources: Pexels, Pixabay)

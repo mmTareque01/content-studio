@@ -3,7 +3,7 @@ import {AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, staticFile, useVideo
 import {Backdrop} from './graphics/Backdrop';
 import {Camera} from './graphics/Camera';
 import {Captions} from './graphics/Captions';
-import {CueView, OVERLAY_TYPES} from './graphics/Cues';
+import {CueView, OVERLAY_TYPES, SCENE_FADE, Scene} from './graphics/Cues';
 import {Film, ProgressBar} from './graphics/Overlays';
 import {Sfx} from './graphics/Sfx';
 import {DEFAULT_ACCENT2, FONT} from './graphics/theme';
@@ -19,17 +19,18 @@ export const Explainer: React.FC<LoadedProps> = ({name, words = [], cues: file})
 	const accent2 = file?.accent2 ?? DEFAULT_ACCENT2;
 	const cues = file?.cues ?? [];
 	const footage = !!file?.footage;
+	const voice = !!file?.voice;
 	const punch = file?.punch ?? true;
 	const media = !!file; // false on a fresh clone with no prepared video
 
 	const layer = (keep: (c: Cue) => boolean) =>
 		cues.map((c, i) => {
-			if (!keep(c)) return null;
+			if (!keep(c) || c.type === 'scene') return null;
 			const from = Math.round(c.from * fps);
 			const dur = Math.max(1, Math.round((c.to - c.from) * fps));
 			return (
 				<Sequence key={i} from={from} durationInFrames={dur} layout="none">
-					<CueView cue={c} accent={accent} accent2={accent2} dur={dur} dark={footage} />
+					<CueView cue={c} accent={accent} accent2={accent2} dur={dur} dark={footage || voice} />
 				</Sequence>
 			);
 		});
@@ -49,14 +50,24 @@ export const Explainer: React.FC<LoadedProps> = ({name, words = [], cues: file})
 				) : (
 					<Backdrop accent={accent} accent2={accent2} />
 				)}
+				{/* Voice mode: stock scenes, each held a little past its end so the next one crossfades over it */}
+				{cues.map((c, i) => {
+					if (c.type !== 'scene') return null;
+					const dur = Math.max(1, Math.round((c.to - c.from) * fps));
+					return (
+						<Sequence key={i} from={Math.round(c.from * fps)} durationInFrames={dur + SCENE_FADE} layout="none">
+							<Scene cue={c} dur={dur} index={i} />
+						</Sequence>
+					);
+				})}
 			</Camera>
-			{footage ? <AbsoluteFill style={{background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.5) 100%)'}} /> : null}
+			{footage || voice ? <AbsoluteFill style={{background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 35%, transparent 75%, rgba(0,0,0,0.5) 100%)'}} /> : null}
 
 			{/* 2. Voice-synced cards (upper area, behind you) */}
 			{layer((c) => !OVERLAY_TYPES.has(c.type))}
 
 			{/* 3. You, cut out of your real background */}
-			{footage || !media ? null : (
+			{footage || voice || !media ? null : (
 				<Camera cues={cues} punch={punch}>
 					<AbsoluteFill style={{justifyContent: 'flex-end', alignItems: 'center'}}>
 						<OffthreadVideo
@@ -79,8 +90,8 @@ export const Explainer: React.FC<LoadedProps> = ({name, words = [], cues: file})
 			<Captions words={words} accent={accent} accent2={accent2} style={file?.captionStyle} emphasis={file?.emphasis} />
 			{file?.progress === false ? null : <ProgressBar accent={accent} accent2={accent2} />}
 
-			{/* 7. Audio (footage mode plays talk.mp4's own audio) */}
-			{footage || !media ? null : <Audio src={staticFile(`${base}/talk.mp4`)} />}
+			{/* 7. Audio (footage mode plays talk.mp4's own audio, voice mode the voice-over) */}
+			{footage || !media ? null : <Audio src={staticFile(`${base}/${voice ? 'voice.m4a' : 'talk.mp4'}`)} />}
 			{file?.music ? <Audio src={staticFile(file.music)} volume={file.musicVolume ?? 0.08} loop /> : null}
 			{file?.sfx === false ? null : <Sfx cues={cues} volume={file?.sfxVolume ?? 0.35} />}
 		</AbsoluteFill>

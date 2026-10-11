@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Easing, Img, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, OffthreadVideo, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import type {Cue} from '../types';
 import {EmojiBurst, Rays, Sparkles} from './Particles';
 import {DISPLAY, FONT, clamp, useEnter} from './theme';
@@ -592,6 +592,47 @@ const Sticker: React.FC<{cue: C<'sticker'>} & Colors> = ({cue, accent, accent2})
 	);
 };
 
+// ---------- scenes ----------
+
+// Frames a scene keeps showing past its `to`, so the next scene crossfades over it instead of over black.
+export const SCENE_FADE = 12;
+
+const MOVES = {
+	in: {s: [1.05, 1.22], x: [0, 0], y: [0, 0]},
+	out: {s: [1.22, 1.05], x: [0, 0], y: [0, 0]},
+	left: {s: [1.18, 1.18], x: [4, -4], y: [0, 0]},
+	right: {s: [1.18, 1.18], x: [-4, 4], y: [0, 0]},
+	up: {s: [1.18, 1.18], x: [0, 0], y: [4, -4]},
+	down: {s: [1.18, 1.18], x: [0, 0], y: [-4, 4]},
+} as const;
+
+// Full-screen stock photo or clip with a slow Ken Burns move, drawn under the cards.
+export const Scene: React.FC<{cue: C<'scene'>; dur: number; index: number}> = ({cue, dur, index}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const order = ['in', 'right', 'out', 'left', 'up', 'down'] as const;
+	const m = MOVES[cue.move ?? order[index % order.length]];
+	const t = interpolate(frame, [0, dur], [0, 1], {...clamp, easing: Easing.inOut(Easing.sin)});
+	const lerp = (r: readonly [number, number]) => r[0] + (r[1] - r[0]) * t;
+	const fade = interpolate(frame, [0, SCENE_FADE], [0, 1], clamp);
+	const style: React.CSSProperties = {
+		width: '100%',
+		height: '100%',
+		objectFit: 'cover',
+		transform: `translate(${lerp(m.x)}%, ${lerp(m.y)}%) scale(${lerp(m.s)})`,
+	};
+	return (
+		<AbsoluteFill style={{opacity: fade, overflow: 'hidden'}}>
+			{/\.(mp4|webm|mov)$/i.test(cue.src) ? (
+				<OffthreadVideo src={staticFile(cue.src)} muted trimBefore={Math.round((cue.start ?? 0) * fps)} style={style} />
+			) : (
+				<Img src={staticFile(cue.src)} style={style} />
+			)}
+			<AbsoluteFill style={{backgroundColor: `rgba(0,0,0,${cue.dim ?? 0.35})`}} />
+		</AbsoluteFill>
+	);
+};
+
 // ---------- placement ----------
 
 const Body: React.FC<{cue: Cue} & Colors> = ({cue, ...colors}) => {
@@ -626,6 +667,7 @@ const Body: React.FC<{cue: Cue} & Colors> = ({cue, ...colors}) => {
 		case 'burst':
 			return <EmojiBurst emoji={Array.isArray(cue.emoji) ? cue.emoji : [cue.emoji]} count={cue.count ?? 22} mode={cue.mode ?? 'explode'} seed={Math.round(cue.from * 10)} />;
 		case 'zoom':
+		case 'scene':
 			return null;
 	}
 };
@@ -639,7 +681,7 @@ export const CueView: React.FC<{cue: Cue; accent: string; accent2: string; dur: 
 	const exit = interpolate(frame, [dur - 7, dur], [1, 0], clamp);
 	const vars = dark ? ({'--glass': 'rgba(8,6,16,0.62)'} as React.CSSProperties) : {};
 
-	if (cue.type === 'zoom') return null;
+	if (cue.type === 'zoom' || cue.type === 'scene') return null;
 	if (OVERLAY_TYPES.has(cue.type)) {
 		return (
 			<AbsoluteFill style={{...vars, fontFamily: FONT, opacity: exit, transform: `scale(${1 + (1 - exit) * 0.08})`}}>

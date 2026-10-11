@@ -25,6 +25,8 @@ export type Cue = {from: number; to: number; pos?: Pos; sfx?: boolean; shake?: b
 	| {type: 'bars'; title?: string; items: Scored[]; suffix?: string}
 	| {type: 'cta'; text: string; handle?: string}
 	| {type: 'location'; place: string; sub?: string}
+	// Full-screen stock photo/clip behind the cards, with a slow Ken Burns move. Crossfades from the previous scene.
+	| {type: 'scene'; src: string; move?: 'in' | 'out' | 'left' | 'right' | 'up' | 'down'; dim?: number; start?: number}
 	// Invisible: camera push into x,y (% of frame).
 	| {type: 'zoom'; scale?: number; x?: number; y?: number}
 );
@@ -36,6 +38,7 @@ export type CueFile = {
 	music: string | null; // e.g. "assets/music/lofi.mp3"
 	musicVolume?: number;
 	footage?: boolean; // true = full-screen b-roll (talk.mp4 incl. its audio), no cutout/captions
+	voice?: boolean; // true = voice-over only (voice.m4a), no person; visuals come from `scene` cues + cards
 	sfx?: boolean; // auto sound effects on cues (default true)
 	sfxVolume?: number; // default 0.35
 	punch?: boolean; // snap-zoom the camera on every cue (default true)

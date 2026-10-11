@@ -17,6 +17,7 @@ Pick a short kebab-case `<name>` from the file or topic.
   ffmpeg -y -i inbox/<file> -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30" -c:v libx264 -crf 18 -c:a aac public/videos/<name>/talk.mp4
   ```
   Then write `meta.json` (`{"duration": <ffprobe seconds>, "fps": 30}`) and `words.json` (`{"language": null, "text": "", "words": []}`). To see what's in the shot, extract a contact sheet: `ffmpeg -i talk.mp4 -vf "fps=1/2,scale=270:-1,tile=8x1" sheet.jpg` and look at it.
+- **Voice-over** (an audio file, the user narrates and you build all the visuals): `scripts/prepare.sh inbox/<file>.m4a <name>` (same `medium` rule). It writes `voice.m4a`, `words.json`, `meta.json` and a cues.json with `"voice": true`. See **Voice-over visuals** below.
 
 ## 2. Read the content
 Read `words.json`. Find: the hook (first claim/question), the structure (list? story? comparison?), every number, the payoff, and the ending. Note the exact `s` time of each key word, because cues snap to words.
@@ -42,6 +43,15 @@ All cue types and options are documented in README.md. Editing rules that make v
 9. Card cues sit in the top area. In talking-head mode the person fills the bottom ~60%, so overlays (`sticker`, `pointer`) must avoid covering the face.
 
 Examples: `examples/talking-head.cues.json`, `examples/food-vlog.cues.json`.
+
+## Voice-over visuals
+There is no person on screen, so the picture must carry the video:
+
+1. Split the transcript into **scenes of 2–5 s**, one per idea or sentence. Cover the whole timeline with back-to-back `scene` cues (`to` of one = `from` of the next; they crossfade).
+2. For each scene pick a concrete, filmable search ("robot arm factory", "doctor tablet hospital", "city traffic night"), not abstract words ("future", "change"). Fetch with `.venv/bin/python scripts/stock.py <name> "<search>" -n 2` (add `--photos` for stills). It needs `PEXELS_API_KEY`; if unset, ask the user for a free key, or use their files in `public/assets/`, or skip scenes and stay on the animated studio. Look at a frame of each download (`ffmpeg -ss 1 -i <clip> -frames:v 1 -vf scale=270:-1 x.jpg`) and drop poor matches.
+3. Clips must be at least as long as their scene (the script prints durations); otherwise use `start` or a photo. Vary `move` or let it auto-cycle.
+4. Layer the usual cues on top, with `pos: "center"` for cards since there is no face to avoid: `hook` at 0 s, `stat` for numbers, `bullets`/`steps` for lists, `compare`, `sticker`, `burst`, `cta`. Keep a card on screen for about half the time, so the stock footage gets room to breathe. Raise a scene's `dim` (0.5) under busy cards.
+5. Suggest quiet `music` (0.06–0.1) if the user has a track in `public/assets/music/`.
 
 ## 4. Check, then render
 Run `npm run typecheck`. Render 4–6 stills at key moments (mid-hook, each card fully in, the CTA) and look at them:

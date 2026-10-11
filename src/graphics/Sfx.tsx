@@ -37,6 +37,8 @@ const hitsFor = (c: Cue, fps: number): Hit[] => {
 			return [{at: 0, sound: 'whoosh'}, {at: 26 / fps, sound: 'click'}, {at: 27 / fps, sound: 'ding', vol: 0.6}];
 		case 'zoom':
 			return [{at: 0, sound: 'whoosh', vol: 0.5}];
+		case 'scene':
+			return [{at: 0, sound: 'whoosh', vol: 0.4}];
 	}
 };
 

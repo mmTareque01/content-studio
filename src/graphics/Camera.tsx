@@ -10,6 +10,8 @@ const SHAKERS = new Set(['hook', 'sticker']);
 // Where the camera wants to be once `cue` has started.
 const target = (c: Cue, i: number, punch: boolean): Shot => {
 	if (c.type === 'zoom') return {scale: c.scale ?? 1.35, x: c.x ?? 50, y: c.y ?? 45};
+	// A new scene settles the camera wide; the scene does its own slow Ken Burns move.
+	if (c.type === 'scene') return {scale: 1, x: 50, y: 38};
 	// Alternate tight/wide on every cue: the classic jump-cut punch-in.
 	return {scale: punch && i % 2 === 0 ? 1.1 : 1, x: 50, y: 38};
 };
